@@ -1,0 +1,56 @@
+# Python bytecode files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment directories
+venv/
+env/
+.venv/
+.env
+.env/
+
+# Python package distribution files
+*.egg
+*.egg-info
+dist/
+build/
+pip-wheel-metadata/
+env3/
+
+# Editor specific files
+.vscode/
+.idea/
+*.swp
+
+# macOS-specific files
+.DS_Store
+
+# Jupyter Notebooks checkpoint
+.ipynb_checkpoints/
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# Pytest cache
+.cache/
+
+# Flask instance folder
+instance/
+
+# Flask config files
+*.cfg
+*.ini
+
+# coverage reports
+.coverage
+*.cover
+
+# SQLAlchemy database files
+*.db
+*.sqlite

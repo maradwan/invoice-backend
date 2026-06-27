@@ -1,0 +1,116 @@
+{
+  "id": null,
+  "uid": "invoice-loki-logs",
+  "title": "Invoice Backend - Loki Logs",
+  "tags": ["invoice", "loki", "logs"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Log Volume (lines/s)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate({compose_service=~\"backend|mongodb|grafana|prometheus|loki|tempo|otel-collector|alloy|mlflow|langfuse|langfuse-postgres|langfuse-clickhouse|langfuse-redis|langfuse-minio\"}[5m]))",
+          "queryType": "range",
+          "legendFormat": "total"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Error Logs (lines/s)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate({compose_service=~\"backend|mongodb|grafana|prometheus|loki|tempo|otel-collector|alloy|mlflow|langfuse|langfuse-postgres|langfuse-clickhouse|langfuse-redis|langfuse-minio\"} |= \"error\" [5m]))",
+          "queryType": "range",
+          "legendFormat": "errors"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "logs",
+      "title": "Backend Logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 8 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{compose_service=\"backend\"}",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      }
+    },
+    {
+      "id": 4,
+      "type": "logs",
+      "title": "Monitoring Components Logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 18 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{compose_service=~\"grafana|prometheus|loki|tempo|otel-collector|alloy|mlflow|langfuse|langfuse-postgres|langfuse-clickhouse|langfuse-redis|langfuse-minio\"}",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      }
+    },
+    {
+      "id": 99,
+      "type": "text",
+      "title": "Data Source Legend",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 28 },
+      "options": {
+        "mode": "markdown",
+        "content": "**This dashboard uses Loki logs.**\\n\\n- **Loki panels**: container/application logs\\n- **Prometheus metrics**: shown in Prometheus-based dashboards\\n- **Tempo traces**: shown in Tempo dashboard/Explore\\n- **Langfuse traces/scores/users**: available in Langfuse UI"
+      }
+    }
+  ],
+  "templating": { "list": [] },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  }
+}

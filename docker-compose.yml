@@ -1,0 +1,49 @@
+services:
+  backend:
+    build: .
+    #container_name: fastapi_app
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URI: ${MONGO_URI}
+      DB_NAME: ${DB_NAME:-image_db}
+      COLLECTION_IMAGES: ${COLLECTION_IMAGES:-images}
+      COLLECTION_USERS: ${COLLECTION_USERS:-users}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+    volumes:
+      - .:/app  # Ensure your local files sync inside the container
+      - customers_uploads:/customers-uploads  # Persist uploads directory
+    networks:
+      - invoice-network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    command: ["mongod", "--wiredTigerCacheSizeGB", "1"]
+    networks:
+      - invoice-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet mongodb:27017/admin -u ${MONGO_INITDB_ROOT_USERNAME} -p ${MONGO_INITDB_ROOT_PASSWORD}
+      interval: 10s
+      retries: 5
+
+volumes:
+  customers_uploads:  # Define volume for customer uploads
+  mongodb_data:  # Define volume for MongoDB
+
+networks:
+  invoice-network:
+    name: invoice-shared-network
+    driver: bridge

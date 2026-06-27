@@ -1,0 +1,493 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: invoice-backend-slo
+    folder: Invoice Backend
+    interval: 1m
+    rules:
+      - uid: invoice-backend-down
+        title: Backend Down
+        condition: B
+        for: 2m
+        noDataState: Alerting
+        execErrState: Alerting
+        annotations:
+          summary: Invoice backend is not reachable by Prometheus.
+          runbook: Check backend container health, app logs, and network connectivity.
+        labels:
+          severity: critical
+          service: backend
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: max(up{job="backend"})
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: threshold
+
+      - uid: invoice-http-5xx-high
+        title: High 5xx Error Rate
+        condition: B
+        for: 5m
+        noDataState: NoData
+        execErrState: Alerting
+        annotations:
+          summary: 5xx error rate is above 2 percent.
+          runbook: Inspect backend logs and recent deploy changes.
+        labels:
+          severity: warning
+          service: backend
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: 100 * sum(rate(http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 1)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 2
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: threshold
+
+      - uid: invoice-ai-error-rate-high
+        title: AI Error Rate High
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: AI error rate is above 5 percent.
+          runbook: Check OpenAI API errors, rate limits, and token quotas.
+        labels:
+          severity: warning
+          service: ai
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: 100 * sum(rate(ai_requests_total{status="error"}[5m])) / clamp_min(sum(rate(ai_requests_total[5m])), 1)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 5
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: threshold
+
+      - uid: invoice-ai-latency-p95-high
+        title: AI p95 Latency High
+        condition: B
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: AI p95 latency is above 6 seconds.
+          runbook: Check model provider latency and input payload sizes.
+        labels:
+          severity: warning
+          service: ai
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (le))
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 6
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: threshold
+
+      - uid: invoice-mongodb-exporter-down
+        title: MongoDB Exporter Down
+        condition: B
+        for: 3m
+        noDataState: Alerting
+        execErrState: Alerting
+        annotations:
+          summary: MongoDB exporter is not reachable by Prometheus.
+          runbook: Check mongodb-exporter and MongoDB credentials/connectivity.
+        labels:
+          severity: critical
+          service: mongodb
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: max(up{job="mongodb-exporter"})
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: threshold
+
+      - uid: invoice-mongodb-connections-high
+        title: MongoDB Connections High
+        condition: B
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: MongoDB current connections are above 80 percent of total connection capacity.
+          runbook: Review client pool usage and tune MongoDB connection limits.
+        labels:
+          severity: warning
+          service: mongodb
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: 100 * max(mongodb_ss_connections{conn_type="current"}) / clamp_min(max(mongodb_ss_connections{conn_type="current"}) + max(mongodb_ss_connections{conn_type="available"}), 1)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 80
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: threshold
+
+      - uid: invoice-ai-parse-failure-rate-high
+        title: AI Parse Failure Rate High
+        condition: B
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: AI parse/validation failure rate is above 2 percent.
+          runbook: Check prompt/schema compatibility and model output format changes.
+        labels:
+          severity: warning
+          service: ai
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: 100 * sum(rate(ai_parse_failures_total[5m])) / clamp_min(sum(rate(ai_requests_total{status="success"}[5m])), 1)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 2
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: threshold
+
+      - uid: invoice-ai-hourly-cost-high
+        title: AI Estimated Hourly Cost High
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: Estimated AI cost in last hour is above threshold.
+          runbook: Check traffic spikes, token usage growth, and model selection.
+        labels:
+          severity: warning
+          service: ai
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(increase(ai_cost_usd_total[1h]))
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 2
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: threshold
+
+      - uid: invoice-extraction-failure-rate-high
+        title: Invoice Extraction Failure Rate High
+        condition: B
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: Invoice extraction failure rate is above 5 percent.
+          runbook: Check file quality, upstream model availability, and extraction exceptions.
+        labels:
+          severity: warning
+          service: ai
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: 100 * sum(rate(invoice_processing_total{stage="invoice_extraction",status="error"}[5m])) / clamp_min(sum(rate(invoice_processing_total{stage="invoice_extraction"}[5m])), 1)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 5
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: threshold

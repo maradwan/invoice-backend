@@ -1,0 +1,161 @@
+{
+  "id": null,
+  "uid": "invoice-tempo-traces",
+  "title": "Invoice Backend - Tempo Traces",
+  "tags": ["invoice", "tempo", "traces"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "Trace Workflow",
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "Use Grafana Explore with the **Tempo** datasource for full trace inspection.\n\nSuggested TraceQL queries:\n- `{}` to list recent traces\n- `{ span.http.target = \"/upload\" }` for upload endpoint\n- `{ status = error }` for failing traces\n\nPanels below show whether the trace pipeline is healthy (collector accepting and exporting spans)."
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Collector Accepted Spans/s",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(otelcol_receiver_accepted_spans{job=\"otel-collector\"}[5m]))",
+          "legendFormat": "accepted spans/s"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Collector Exported Spans/s",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(otelcol_exporter_sent_spans{job=\"otel-collector\"}[5m]))",
+          "legendFormat": "exported spans/s"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Collector Failed Spans/s",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(otelcol_exporter_send_failed_spans{job=\"otel-collector\"}[5m]))",
+          "legendFormat": "failed spans/s"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Collector Trace Pipeline Throughput",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 11 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(otelcol_receiver_accepted_spans{job=\"otel-collector\"}[5m]))",
+          "legendFormat": "accepted"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(otelcol_exporter_sent_spans{job=\"otel-collector\"}[5m]))",
+          "legendFormat": "exported"
+        },
+        {
+          "refId": "C",
+          "expr": "sum(rate(otelcol_exporter_send_failed_spans{job=\"otel-collector\"}[5m]))",
+          "legendFormat": "failed"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Backend HTTP Request Rate (trace candidate load)",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 11 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_requests_total{job=\"backend\"}[5m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "text",
+      "title": "Datasource Check",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 20 },
+      "options": {
+        "mode": "markdown",
+        "content": "Tempo is provisioned as datasource **Tempo**. If traces are empty, verify:\n1. `OTEL_ENABLED=true` in backend env\n2. backend exports OTLP to `otel-collector:4317`\n3. Collector forwards traces to Tempo\n4. Grafana time range includes recent requests"
+      }
+    },
+    {
+      "id": 99,
+      "type": "text",
+      "title": "Data Source Legend",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 26 },
+      "options": {
+        "mode": "markdown",
+        "content": "**This dashboard validates Tempo trace pipeline health.**\\n\\n- **Tempo traces**: backend spans exported through OTEL Collector\\n- **Prometheus stats here**: collector throughput/failure counters\\n- **Langfuse traces/scores/users**: available in Langfuse UI"
+      }
+    }
+  ],
+  "templating": { "list": [] },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  }
+}
